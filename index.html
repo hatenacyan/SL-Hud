@@ -1,246 +1,187 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta charset='UTF-8'>
 <style>
-    * { box-sizing: border-box; }
-    html, body {
-        width: 100%; height: 100%; margin: 0; padding: 0;
-        background-color: #1a1a1a; color: #fff; font-family: sans-serif;
-        overflow: hidden; user-select: none;
-    }
-    .wrapper {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        display: flex; flex-direction: column; padding: 8px;
-    }
-    .header {
-        flex-shrink: 0; height: 38px; display: flex;
-        justify-content: space-between; align-items: center;
-        border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 6px;
-    }
-    .header > span { font-size: 20px; font-weight: bold; color: #fff; }
-    .header-right { display: flex; align-items: center; gap: 6px; }
-    
-    #user-list {
-        flex-grow: 1; overflow-y: auto; display: flex;
-        flex-direction: column; gap: 4px;
-    }
-    .user-row {
-        display: flex; align-items: center; background: #2a2a2a;
-        padding: 0 8px; border-radius: 4px; height: 36px; width: 100%; flex-shrink: 0;
-    }
-    
-    .status-dot {
-        width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; flex-shrink: 0;
-    }
-    .online { background-color: #4CAF50; box-shadow: 0 0 4px #4CAF50; }
-    .offline { background-color: #F44336; }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #1a1a1a; color: #fff; overflow: hidden; user-select: none; }
 
-    .avatar-icon {
-        width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
-        margin-right: 8px; flex-shrink: 0; background-color: #444;
-    }
+body.font-meiryo { font-family: 'Meiryo', sans-serif; }
+body.font-gothic { font-family: 'MS Gothic', 'Osaka', sans-serif; }
+body.font-rounded { font-family: 'Rounded Mplus 1c', 'Hiragino Maru Gothic ProN', sans-serif; }
+body.font-mincho { font-family: 'MS Mincho', serif; }
 
-    .name-link {
-        color: #fff; text-decoration: none; white-space: nowrap;
-        overflow: hidden; text-overflow: ellipsis; text-align: left;
-        flex-grow: 1; cursor: pointer;
-    }
-    .name-link:hover { color: #4CAF50; text-decoration: underline; }
+.wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 8px; }
 
-    body.font-small .name-link { font-size: 11px; }
-    body.font-medium .name-link { font-size: 13px; }
-    body.font-large .name-link { font-size: 15px; }
+.header { flex-shrink: 0; height: 38px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 6px; }
+.header-controls { display: flex; gap: 6px; align-items: center; }
+#user-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.user-row { display: flex; align-items: center; background: #2a2a2a; padding: 0 8px; border-radius: 4px; height: 36px; width: 100%; flex-shrink: 0; }
 
-    .display-name { font-weight: bold; }
-    .user-name { color: #aaa; font-size: 0.9em; margin-left: 4px; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+.status-dot.online { background-color: #00ff66; box-shadow: 0 0 6px #00ff66; }
+.status-dot.offline { background-color: #555555; }
 
-    .font-btn, .nav-btn, .setup-btn {
-        background: #333; color: #fff; border: 1px solid #555;
-        border-radius: 4px; cursor: pointer; font-weight: bold; text-align: center; font-size: 12px;
-    }
-    .font-btn { padding: 2px 6px; }
-    .font-btn:active, .nav-btn:active, .setup-btn:active { background: #555; }
-    
-    .nav-footer {
-        flex-shrink: 0; height: 32px; display: flex; justify-content: space-between; margin-top: 6px;
-    }
-    .nav-btn { height: 100%; width: 48%; }
-    
-    .error-box {
-        color: #ff6b6b; padding: 12px; background: #400; border-radius: 4px;
-        font-size: 12px; line-height: 1.4; word-break: break-all;
-    }
-    .setup-input {
-        width: 100%; padding: 6px; margin-top: 6px; margin-bottom: 6px;
-        background: #222; color: #fff; border: 1px solid #666; border-radius: 4px; font-size: 11px;
-    }
-    .setup-btn { width: 100%; padding: 6px; margin-top: 4px; background: #2e7d32; border-color: #43a047; }
+.avatar-icon { width: 24px; height: 24px; border-radius: 50%; background: #4a5568; color: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 8px; flex-shrink: 0; border: 1px solid #718096; }
+
+.name-link { color: #fff; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; cursor: pointer; font-weight: bold; }
+.name-link:hover { color: #4CAF50; text-decoration: underline; }
+
+body.size-small .name-link { font-size: 11px; }
+body.size-medium .name-link { font-size: 13px; }
+body.size-large .name-link { font-size: 15px; }
+
+.ctrl-btn, .ctrl-select { background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 6px; }
+.close-btn { background: #552222; color: #ff9999; border: 1px solid #773333; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 8px; cursor: pointer; margin-left: 2px; }
+.close-btn:hover { background: #772222; color: #fff; }
+
+.footer { flex-shrink: 0; height: 32px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 4px; margin-top: 6px; }
 </style>
 </head>
-<body class="font-medium">
-    <div class="wrapper">
-        <div class="header">
-            <span>Status HUD</span>
-            <div class="header-right">
-                <button class="font-btn" id="font-toggle-btn">文字: 標準</button>
-                <span id="page-info">1/5</span>
-            </div>
-        </div>
-        <div id="user-list">データを読み込んでいます...</div>
-        <div class="nav-footer">
-            <button class="nav-btn" id="prev-btn">◀ 前へ</button>
-            <button class="nav-btn" id="next-btn">次へ ▶</button>
+<body class='font-meiryo size-medium'>
+<div class='wrapper'>
+    <div class='header'><span id='header-title'>Status</span>
+        <div class='header-controls'>
+            <select class='ctrl-select' id='interval-select'>
+                <option value='10'>10秒</option>
+                <option value='30'>30秒</option>
+                <option value='60'>1分</option>
+                <option value='180'>3分</option>
+                <option value='300' selected>5分</option>
+                <option value='600'>10分</option>
+                <option value='900'>15分</option>
+            </select>
+            <select class='ctrl-select' id='size-select'>
+                <option value='size-small'>小</option>
+                <option value='size-medium' selected>標準</option>
+                <option value='size-large'>大</option>
+            </select>
+            <select class='ctrl-select' id='font-select'>
+                <option value='font-meiryo' selected>メイリオ</option>
+                <option value='font-gothic'>ゴシック</option>
+                <option value='font-rounded'>丸ゴシック</option>
+                <option value='font-mincho'>明朝</option>
+            </select>
+            <button class='close-btn' id='close-btn'>×</button>
         </div>
     </div>
-    <script>
-        (async function() {
-            let allUsers = [];
-            const urlParams = new URLSearchParams(window.location.search);
-            let backendUrl = urlParams.get('backend');
+    <div id='user-list'>読み込み中...</div>
+    <div class='footer'>
+        <button class='ctrl-btn' id='prev-page'>◀ 前へ</button>
+        <span id='page-indicator' style='font-size:12px; font-weight:bold;'>1 / 1 ページ</span>
+        <button class='ctrl-btn' id='next-page'>次へ ▶</button>
+    </div>
+</div>
 
-            if (!backendUrl) {
-                try {
-                    backendUrl = localStorage.getItem('hud_backend_url');
-                } catch (e) {}
-            } else {
-                try {
-                    localStorage.setItem('hud_backend_url', backendUrl);
-                } catch (e) {}
-            }
+<script>
+let currentPage = 0;
+const itemsPerPage = 10;
+let cachedData = null;
 
-            const container = document.getElementById('user-list');
+const urlParams = new URLSearchParams(window.location.search);
+const slServer = urlParams.get('sl_url'); // Second LifeのLSLサーバーURLを受け取る
 
-            if (!backendUrl) {
-                container.innerHTML = `
-                    <div class="error-box">
-                        <strong>バックエンドURL未設定</strong><br>
-                        オブジェクトのチャットに表示されたURLを貼り付けてください：
-                        <input type="text" id="backend-input" class="setup-input" placeholder="https://... ?backend=...">
-                        <button id="backend-save" class="setup-btn">接続する</button>
-                    </div>
-                `;
-                document.getElementById('backend-save').onclick = () => {
-                    const val = document.getElementById('backend-input').value.trim();
-                    if (val) {
-                        try { localStorage.setItem('hud_backend_url', val); } catch (e) {}
-                        window.location.href = window.location.pathname + '?backend=' + encodeURIComponent(val);
-                    }
-                };
-                return;
-            }
+function renderList() {
+    if (!cachedData) return;
+    const listContainer = document.getElementById('user-list');
+    listContainer.innerHTML = '';
+    
+    document.getElementById('header-title').textContent = 'Status (' + cachedData.users.length + ')';
 
-            try {
-                const response = await fetch(backendUrl);
-                if (!response.ok) throw new Error('LSLからのデータ取得に失敗しました');
-                const data = await response.json();
-                allUsers = data.users || [];
-            } catch (err) {
-                container.innerHTML = `
-                    <div class="error-box">
-                        通信エラーが発生しました。<br>${err.message}<br>
-                        <button id="reset-url" class="setup-btn" style="margin-top:8px;">URLを再設定する</button>
-                    </div>
-                `;
-                document.getElementById('reset-url').onclick = () => {
-                    try { localStorage.removeItem('hud_backend_url'); } catch (e) {}
-                    window.location.reload();
-                };
-                return;
-            }
+    let rows = cachedData.users.map((u, i) => {
+        let st = cachedData.statuses[i] || '0';
+        return {
+            index: i,
+            uuid: u.uuid,
+            name: u.name,
+            status: st === '1' ? '1' : '0'
+        };
+    });
 
-            const fontModes = [
-                { class: "font-small", label: "文字: 小" },
-                { class: "font-medium", label: "文字: 標準" },
-                { class: "font-large", label: "文字: 大" }
-            ];
+    rows.sort((a, b) => {
+        if (a.status !== b.status) {
+            return parseInt(b.status) - parseInt(a.status);
+        }
+        return a.index - b.index;
+    });
 
-            let currentFontIdx = 1;
-            try {
-                const saved = localStorage.getItem('hud_font_idx');
-                if (saved !== null) currentFontIdx = parseInt(saved, 10);
-            } catch (e) {}
+    const totalPages = Math.max(1, Math.ceil(rows.length / itemsPerPage));
+    if (currentPage >= totalPages) currentPage = totalPages - 1;
 
-            function applyFontSettings() {
-                const mode = fontModes[currentFontIdx];
-                document.body.className = mode.class;
-                document.getElementById('font-toggle-btn').textContent = mode.label;
-                try { localStorage.setItem('hud_font_idx', currentFontIdx); } catch (e) {}
-            }
+    const startIdx = currentPage * itemsPerPage;
+    const pageRows = rows.slice(startIdx, startIdx + itemsPerPage);
 
-            function updateDisplay() {
-                applyFontSettings();
-                let pageNum = parseInt(urlParams.get('page'), 10) || 1;
-                if (pageNum < 1) pageNum = 1;
-                if (pageNum > 5) pageNum = 5;
+    if (rows.length === 0) {
+        listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>有効なユーザーが見つかりません</div>";
+        return;
+    }
 
-                document.getElementById('page-info').textContent = pageNum + "/5";
-                container.innerHTML = '';
+    pageRows.forEach(r => {
+        const profile_url = "secondlife:///app/agent/" + r.uuid + "/about";
+        const initial_char = r.name.charAt(0).toUpperCase();
+        
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'user-row';
+        rowDiv.innerHTML = `
+            <span class='status-dot ${r.status === '1' ? 'online' : 'offline'}'></span>
+            <div class='avatar-icon'>${initial_char}</div>
+            <a class='name-link' href='${profile_url}'>${r.name}</a>
+        `;
+        listContainer.appendChild(rowDiv);
+    });
 
-                const startIdx = (pageNum - 1) * 10;
-                const pageUsers = allUsers.slice(startIdx, startIdx + 10);
+    document.getElementById('page-indicator').textContent = (currentPage + 1) + ' / ' + totalPages + ' ページ';
+}
 
-                if (pageUsers.length === 0) {
-                    container.innerHTML = '<div class="error-box">ユーザーがいません</div>';
-                    return;
-                }
+document.getElementById('prev-page').onclick = () => {
+    if (!cachedData) return;
+    const totalPages = Math.max(1, Math.ceil(cachedData.users.length / itemsPerPage));
+    currentPage = (currentPage - 1 + totalPages) % totalPages;
+    renderList();
+};
 
-                pageUsers.forEach(user => {
-                    const row = document.createElement('div');
-                    row.className = 'user-row';
-                    
-                    const dot = document.createElement('div');
-                    dot.className = 'status-dot ' + (user.o ? 'online' : 'offline');
-                    
-                    const icon = document.createElement('img');
-                    icon.className = 'avatar-icon';
-                    icon.src = user.img ? ('https://cap.secondlife.com/cap/0/' + user.img) : '';
-                    icon.onerror = () => { icon.style.display = 'none'; };
-                    
-                    const nameLink = document.createElement('a');
-                    nameLink.className = 'name-link';
-                    nameLink.href = 'secondlife:///app/agent/' + user.uuid + '/about';
-                    
-                    const dSpan = document.createElement('span');
-                    dSpan.className = 'display-name';
-                    dSpan.textContent = user.dname;
-                    
-                    const uSpan = document.createElement('span');
-                    uSpan.className = 'user-name';
-                    uSpan.textContent = '(' + user.uname + ')';
-                    
-                    nameLink.appendChild(dSpan);
-                    nameLink.appendChild(uSpan);
-                    
-                    row.appendChild(dot);
-                    row.appendChild(icon);
-                    row.appendChild(nameLink);
-                    container.appendChild(row);
-                });
-            }
+document.getElementById('next-page').onclick = () => {
+    if (!cachedData) return;
+    const totalPages = Math.max(1, Math.ceil(cachedData.users.length / itemsPerPage));
+    currentPage = (currentPage + 1) % totalPages;
+    renderList();
+};
 
-            document.getElementById('font-toggle-btn').onclick = (e) => {
-                e.stopPropagation();
-                currentFontIdx = (currentFontIdx + 1) % fontModes.length;
-                applyFontSettings();
-            };
+document.getElementById('size-select').onchange = (e) => {
+    document.body.classList.remove('size-small', 'size-medium', 'size-large');
+    document.body.classList.add(e.target.value);
+};
 
-            document.getElementById('prev-btn').onclick = () => {
-                let pageNum = parseInt(urlParams.get('page'), 10) || 1;
-                let prev = pageNum - 1; if (prev < 1) prev = 5;
-                urlParams.set('page', prev);
-                window.location.search = urlParams.toString();
-            };
+document.getElementById('font-select').onchange = (e) => {
+    document.body.classList.remove('font-meiryo', 'font-gothic', 'font-rounded', 'font-mincho');
+    document.body.classList.add(e.target.value);
+};
 
-            document.getElementById('next-btn').onclick = () => {
-                let pageNum = parseInt(urlParams.get('page'), 10) || 1;
-                let next = pageNum + 1; if (next > 5) next = 1;
-                urlParams.set('page', next);
-                window.location.search = urlParams.toString();
-            };
+document.getElementById('interval-select').onchange = (e) => {
+    if (slServer) {
+        fetch(slServer + '/api/set_interval?sec=' + e.target.value).catch(err => {});
+    }
+};
 
-            updateDisplay();
-        })();
-    </script>
+document.getElementById('close-btn').onclick = () => {
+    if (slServer) {
+        fetch(slServer + '/api/detach').catch(err => {});
+    }
+};
+
+function updateStatuses() {
+    if (!slServer) return;
+    fetch(slServer + '/api/data')
+        .then(r => r.json())
+        .then(data => {
+            cachedData = data;
+            renderList();
+        })
+        .catch(e => {});
+}
+
+setInterval(updateStatuses, 2500);
+updateStatuses();
+</script>
 </body>
 </html>
