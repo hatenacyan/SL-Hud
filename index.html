@@ -40,7 +40,6 @@
         margin-bottom: 6px;
     }
 
-    /* 「Status HUD」の文字を大きく変更 */
     .header > span {
         font-size: 20px;
         font-weight: bold;
@@ -146,17 +145,27 @@
                 <span id="page-info">1/5</span>
             </div>
         </div>
-        <div id="user-list">読み込み中...</div>
+        <div id="user-list">データを取得中...</div>
         <div class="nav-footer">
             <button class="nav-btn" id="prev-btn">◀ 前へ</button>
             <button class="nav-btn" id="next-btn">次へ ▶</button>
         </div>
     </div>
     <script>
-        try {
-            const allUsers = [];
-            for (let i = 1; i <= 50; i++) {
-                allUsers.push({ n: "ユーザー " + i, o: (i % 3 !== 0) });
+        (async function() {
+            let allUsers = [];
+
+            try {
+                // 同じリポジトリ内に配置する 'users.json' からデータを取得
+                const response = await fetch('users.json?' + new Date().getTime());
+                if (!response.ok) throw new Error('データファイルの取得に失敗しました');
+                const data = await response.json();
+                allUsers = data.users || [];
+            } catch (err) {
+                // 取得失敗時のフォールバック（テスト用データ）
+                for (let i = 1; i <= 50; i++) {
+                    allUsers.push({ n: "取得エラー / ユーザー " + i, o: false });
+                }
             }
 
             const fontModes = [
@@ -200,6 +209,11 @@
                 const startIdx = (pageNum - 1) * 10;
                 const pageUsers = allUsers.slice(startIdx, startIdx + 10);
 
+                if (pageUsers.length === 0) {
+                    container.innerHTML = '<div class="error-box">表示するユーザーがいません</div>';
+                    return;
+                }
+
                 pageUsers.forEach(user => {
                     const row = document.createElement('div');
                     row.className = 'user-row';
@@ -208,6 +222,7 @@
                     const nameSpan = document.createElement('div');
                     nameSpan.className = 'name';
                     nameSpan.textContent = user.n;
+                    row.async = false;
                     row.appendChild(dot);
                     row.appendChild(nameSpan);
                     container.appendChild(row);
@@ -237,9 +252,7 @@
             };
 
             updateDisplay();
-        } catch (err) {
-            document.getElementById('user-list').innerHTML = '<div class="error-box">JSエラー: ' + err.message + '</div>';
-        }
+        })();
     </script>
 </body>
 </html>
