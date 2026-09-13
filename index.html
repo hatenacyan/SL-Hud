@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    html, body {
+        width: 320px;
+        height: 512px;
+        margin: 0;
+        padding: 0;
+        background-color: #222;
+        color: #fff;
+        font-family: sans-serif;
+        font-size: 13px;
+        overflow: hidden;
+        user-select: none;
+        box-sizing: border-box;
+    }
+
+    .wrapper {
+        width: 320px;
+        height: 512px;
+        display: flex;
+        flex-direction: column;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        font-weight: bold;
+        font-size: 12px;
+        color: #ccc;
+        border-bottom: 1px solid #555;
+        padding-bottom: 4px;
+        flex-shrink: 0;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    #user-list {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 6px;
+        overflow-y: auto;
+    }
+
+    .user-row {
+        display: flex;
+        align-items: center;
+        background: #333;
+        padding: 0 8px;
+        border-radius: 4px;
+        height: 24px;
+        box-sizing: border-box;
+        flex-shrink: 0;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+
+    .online { background-color: #4CAF50; }
+    .offline { background-color: #888; }
+
+    .name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+        font-size: 13px;
+        flex-grow: 1;
+    }
+
+    .font-btn, .nav-btn {
+        background: #444;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .font-btn {
+        padding: 2px 6px;
+        font-size: 11px;
+    }
+
+    .font-btn:active, .nav-btn:active {
+        background: #666;
+    }
+
+    .nav-footer {
+        display: flex;
+        justify-content: space-between;
+        flex-shrink: 0;
+        gap: 6px;
+    }
+
+    .nav-btn {
+        padding: 6px;
+        font-size: 12px;
+        width: 48%;
+    }
+
+    .error-box {
+        color: #ff6b6b;
+        padding: 10px;
+        background: #400;
+        border-radius: 4px;
+        word-break: break-all;
+    }
+</style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <span>Status HUD</span>
+            <div class="header-right">
+                <button class="font-btn" id="font-toggle-btn">文字: 標準</button>
+                <span id="page-info">1/5</span>
+            </div>
+        </div>
+        <div id="user-list">読み込み中...</div>
+        <div class="nav-footer">
+            <button class="nav-btn" id="prev-btn">◀ 前へ</button>
+            <button class="nav-btn" id="next-btn">次へ ▶</button>
+        </div>
+    </div>
+    <script>
+        try {
+            const allUsers = [];
+            for (let i = 1; i <= 50; i++) {
+                allUsers.push({ n: "ユーザー " + i, o: (i % 3 !== 0) });
+            }
+
+            let fontSizeLevel = 0;
+            try {
+                fontSizeLevel = parseInt(localStorage.getItem('hud_font_level'), 10) || 0;
+            } catch (e) {}
+
+            const fontSettings = [
+                { label: "文字: 標準", size: "13px" },
+                { label: "文字: 大", size: "15px" }
+            ];
+
+            function applyFontSize() {
+                const setting = fontSettings[fontSizeLevel] || fontSettings[0];
+                document.documentElement.style.fontSize = setting.size;
+                const btn = document.getElementById('font-toggle-btn');
+                if (btn) btn.textContent = setting.label;
+                try {
+                    localStorage.setItem('hud_font_level', fontSizeLevel);
+                } catch (e) {}
+            }
+
+            function updateDisplay() {
+                applyFontSize();
+                const params = new URLSearchParams(window.location.search);
+                let pageNum = parseInt(params.get('page'), 10) || 1;
+                if (pageNum < 1) pageNum = 1;
+                if (pageNum > 5) pageNum = 5;
+
+                const pageInfo = document.getElementById('page-info');
+                if (pageInfo) pageInfo.textContent = pageNum + "/5";
+
+                const container = document.getElementById('user-list');
+                if (!container) return;
+                container.innerHTML = '';
+
+                const startIdx = (pageNum - 1) * 10;
+                const pageUsers = allUsers.slice(startIdx, startIdx + 10);
+
+                pageUsers.forEach(user => {
+                    const row = document.createElement('div');
+                    row.className = 'user-row';
+                    const dot = document.createElement('div');
+                    dot.className = 'status-dot ' + (user.o ? 'online' : 'offline');
+                    const nameSpan = document.createElement('div');
+                    nameSpan.className = 'name';
+                    nameSpan.textContent = user.n;
+                    row.appendChild(dot);
+                    row.appendChild(nameSpan);
+                    container.appendChild(row);
+                });
+            }
+
+            document.getElementById('prev-btn').onclick = () => {
+                const params = new URLSearchParams(window.location.search);
+                let pageNum = parseInt(params.get('page'), 10) || 1;
+                let prev = pageNum - 1;
+                if (prev < 1) prev = 5;
+                window.location.search = '?page=' + prev;
+            };
+
+            document.getElementById('next-btn').onclick = () => {
+                const params = new URLSearchParams(window.location.search);
+                let pageNum = parseInt(params.get('page'), 10) || 1;
+                let next = pageNum + 1;
+                if (next > 5) next = 1;
+                window.location.search = '?page=' + next;
+            };
+
+            document.getElementById('font-toggle-btn').onclick = () => {
+                fontSizeLevel = (fontSizeLevel + 1) % fontSettings.length;
+                applyFontSize();
+                updateDisplay();
+            };
+            
+            updateDisplay();
+        } catch (err) {
+            document.getElementById('user-list').innerHTML = '<div class="error-box">JSエラー: ' + err.message + '</div>';
+        }
+    </script>
+</body>
+</html>
