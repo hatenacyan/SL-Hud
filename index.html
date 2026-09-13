@@ -3,137 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <style>
-    * {
-        box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     html, body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        background-color: #1a1a1a;
-        color: #fff;
-        font-family: sans-serif;
-        overflow: hidden;
-        user-select: none;
+        width: 100%; height: 100%; margin: 0; padding: 0;
+        background-color: #1a1a1a; color: #fff; font-family: sans-serif;
+        overflow: hidden; user-select: none;
     }
-
     .wrapper {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding: 8px;
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; flex-direction: column; padding: 8px;
     }
-
     .header {
-        flex-shrink: 0;
-        height: 38px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #444;
-        padding-bottom: 4px;
-        margin-bottom: 6px;
+        flex-shrink: 0; height: 38px; display: flex;
+        justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 6px;
     }
-
-    .header > span {
-        font-size: 20px;
-        font-weight: bold;
-        color: #fff;
-    }
-
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
+    .header > span { font-size: 20px; font-weight: bold; color: #fff; }
+    .header-right { display: flex; align-items: center; gap: 6px; }
+    
     #user-list {
-        flex-grow: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+        flex-grow: 1; overflow-y: auto; display: flex;
+        flex-direction: column; gap: 4px;
     }
-
     .user-row {
-        display: flex;
-        align-items: center;
-        background: #2a2a2a;
-        padding: 0 8px;
-        border-radius: 4px;
-        height: 32px;
-        width: 100%;
-        flex-shrink: 0;
+        display: flex; align-items: center; background: #2a2a2a;
+        padding: 0 8px; border-radius: 4px; height: 36px; width: 100%; flex-shrink: 0;
     }
-
+    
+    /* オンライン/オフラインの丸（緑丸・赤丸） */
     .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        margin-right: 8px;
-        flex-shrink: 0;
+        width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; flex-shrink: 0;
+    }
+    .online { background-color: #4CAF50; box-shadow: 0 0 4px #4CAF50; }
+    .offline { background-color: #F44336; }
+
+    /* アイコン画像 */
+    .avatar-icon {
+        width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
+        margin-right: 8px; flex-shrink: 0; background-color: #444;
     }
 
-    .online { background-color: #4CAF50; }
-    .offline { background-color: #777; }
-
-    .name {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        text-align: left;
-        flex-grow: 1;
-        font-size: 13px;
+    /* プロフィールを開くリンク */
+    .name-link {
+        color: #fff; text-decoration: none; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; text-align: left;
+        flex-grow: 1; cursor: pointer;
     }
+    .name-link:hover { color: #4CAF50; text-decoration: underline; }
 
-    body.font-small .name { font-size: 11px; }
-    body.font-medium .name { font-size: 13px; }
-    body.font-large .name { font-size: 16px; }
+    /* フォントサイズ切替（表示名とユーザー名のバランスを考慮） */
+    body.font-small .name-link { font-size: 11px; }
+    body.font-medium .name-link { font-size: 13px; }
+    body.font-large .name-link { font-size: 15px; }
+
+    .display-name { font-weight: bold; }
+    .user-name { color: #aaa; font-size: 0.9em; margin-left: 4px; }
 
     .font-btn, .nav-btn {
-        background: #333;
-        color: #fff;
-        border: 1px solid #555;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        text-align: center;
-        font-size: 12px;
+        background: #333; color: #fff; border: 1px solid #555;
+        border-radius: 4px; cursor: pointer; font-weight: bold; text-align: center; font-size: 12px;
     }
-
-    .font-btn {
-        padding: 2px 6px;
-    }
-
-    .font-btn:active, .nav-btn:active {
-        background: #555;
-    }
-
+    .font-btn { padding: 2px 6px; }
+    .font-btn:active, .nav-btn:active { background: #555; }
     .nav-footer {
-        flex-shrink: 0;
-        height: 32px;
-        display: flex;
-        justify-content: space-between;
-        margin-top: 6px;
+        flex-shrink: 0; height: 32px; display: flex; justify-content: space-between; margin-top: 6px;
     }
-
-    .nav-btn {
-        height: 100%;
-        width: 48%;
-    }
-
-    .error-box {
-        color: #ff6b6b;
-        padding: 10px;
-        background: #400;
-        border-radius: 4px;
-        word-break: break-all;
-    }
+    .nav-btn { height: 100%; width: 48%; }
+    .error-box { color: #ff6b6b; padding: 10px; background: #400; border-radius: 4px; word-break: break-all; }
 </style>
 </head>
 <body class="font-medium">
@@ -154,18 +90,18 @@
     <script>
         (async function() {
             let allUsers = [];
+            const urlParams = new URLSearchParams(window.location.search);
+            const backendUrl = urlParams.get('backend');
 
             try {
-                // 同じリポジトリ内に配置する 'users.json' からデータを取得
-                const response = await fetch('users.json?' + new Date().getTime());
-                if (!response.ok) throw new Error('データファイルの取得に失敗しました');
+                if (!backendUrl) throw new Error('LSLバックエンドURLが指定されていません');
+                const response = await fetch(backendUrl);
+                if (!response.ok) throw new Error('LSLからのデータ取得に失敗しました');
                 const data = await response.json();
                 allUsers = data.users || [];
             } catch (err) {
-                // 取得失敗時のフォールバック（テスト用データ）
-                for (let i = 1; i <= 50; i++) {
-                    allUsers.push({ n: "取得エラー / ユーザー " + i, o: false });
-                }
+                document.getElementById('user-list').innerHTML = '<div class="error-box">' + err.message + '</div>';
+                return;
             }
 
             const fontModes = [
@@ -177,32 +113,23 @@
             let currentFontIdx = 1;
             try {
                 const saved = localStorage.getItem('hud_font_idx');
-                if (saved !== null) {
-                    currentFontIdx = parseInt(saved, 10);
-                    if (currentFontIdx < 0 || currentFontIdx >= fontModes.length) currentFontIdx = 1;
-                }
+                if (saved !== null) currentFontIdx = parseInt(saved, 10);
             } catch (e) {}
 
             function applyFontSettings() {
                 const mode = fontModes[currentFontIdx];
                 document.body.className = mode.class;
-                const btn = document.getElementById('font-toggle-btn');
-                if (btn) btn.textContent = mode.label;
-                try {
-                    localStorage.setItem('hud_font_idx', currentFontIdx);
-                } catch (e) {}
+                document.getElementById('font-toggle-btn').textContent = mode.label;
+                try { localStorage.setItem('hud_font_idx', currentFontIdx); } catch (e) {}
             }
 
             function updateDisplay() {
                 applyFontSettings();
-
-                const params = new URLSearchParams(window.location.search);
-                let pageNum = parseInt(params.get('page'), 10) || 1;
+                let pageNum = parseInt(urlParams.get('page'), 10) || 1;
                 if (pageNum < 1) pageNum = 1;
                 if (pageNum > 5) pageNum = 5;
 
                 document.getElementById('page-info').textContent = pageNum + "/5";
-
                 const container = document.getElementById('user-list');
                 container.innerHTML = '';
 
@@ -210,21 +137,44 @@
                 const pageUsers = allUsers.slice(startIdx, startIdx + 10);
 
                 if (pageUsers.length === 0) {
-                    container.innerHTML = '<div class="error-box">表示するユーザーがいません</div>';
+                    container.innerHTML = '<div class="error-box">ユーザーがいません</div>';
                     return;
                 }
 
                 pageUsers.forEach(user => {
                     const row = document.createElement('div');
                     row.className = 'user-row';
+                    
+                    // 1. オンライン状態の丸 (緑丸 / 赤丸)
                     const dot = document.createElement('div');
                     dot.className = 'status-dot ' + (user.o ? 'online' : 'offline');
-                    const nameSpan = document.createElement('div');
-                    nameSpan.className = 'name';
-                    nameSpan.textContent = user.n;
-                    row.async = false;
+                    
+                    // 2. プロフィールアイコン画像
+                    const icon = document.createElement('img');
+                    icon.className = 'avatar-icon';
+                    // セカンドライフのテクスチャUUIDから画像URLを生成
+                    icon.src = user.img ? ('https://cap.secondlife.com/cap/0/ ' + user.img) : ''; // ※テクスチャURL形式に準拠
+                    icon.onerror = () => { icon.style.display = 'none'; }; // 画像がない場合は非表示に
+                    
+                    // 3. 名前リンク (表示名 + ユーザー名)
+                    const nameLink = document.createElement('a');
+                    nameLink.className = 'name-link';
+                    nameLink.href = 'secondlife:///app/agent/' + user.uuid + '/about';
+                    
+                    const dSpan = document.createElement('span');
+                    dSpan.className = 'display-name';
+                    dSpan.textContent = user.dname; // 表示名
+                    
+                    const uSpan = document.createElement('span');
+                    uSpan.className = 'user-name';
+                    uSpan.textContent = '(' + user.uname + ')'; // ユーザー名
+                    
+                    nameLink.appendChild(dSpan);
+                    nameLink.appendChild(uSpan);
+                    
                     row.appendChild(dot);
-                    row.appendChild(nameSpan);
+                    row.appendChild(icon);
+                    row.appendChild(nameLink);
                     container.appendChild(row);
                 });
             }
@@ -236,19 +186,17 @@
             };
 
             document.getElementById('prev-btn').onclick = () => {
-                const params = new URLSearchParams(window.location.search);
-                let pageNum = parseInt(params.get('page'), 10) || 1;
-                let prev = pageNum - 1;
-                if (prev < 1) prev = 5;
-                window.location.search = '?page=' + prev;
+                let pageNum = parseInt(urlParams.get('page'), 10) || 1;
+                let prev = pageNum - 1; if (prev < 1) prev = 5;
+                urlParams.set('page', prev);
+                window.location.search = urlParams.toString();
             };
 
             document.getElementById('next-btn').onclick = () => {
-                const params = new URLSearchParams(window.location.search);
-                let pageNum = parseInt(params.get('page'), 10) || 1;
-                let next = pageNum + 1;
-                if (next > 5) next = 1;
-                window.location.search = '?page=' + next;
+                let pageNum = parseInt(urlParams.get('page'), 10) || 1;
+                let next = pageNum + 1; if (next > 5) next = 1;
+                urlParams.set('page', next);
+                window.location.search = urlParams.toString();
             };
 
             updateDisplay();
