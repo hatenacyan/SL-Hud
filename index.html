@@ -40,6 +40,7 @@
         border-bottom: 1px solid #444;
         padding-bottom: 4px;
         margin-bottom: 6px;
+        font-size: 13px; /* 固定サイズ */
     }
 
     .header-right {
@@ -78,6 +79,7 @@
     .online { background-color: #4CAF50; }
     .offline { background-color: #777; }
 
+    /* ユーザー名のフォントサイズだけが3段階で変わる */
     .name {
         white-space: nowrap;
         overflow: hidden;
@@ -85,17 +87,9 @@
         text-align: left;
         flex-grow: 1;
     }
-
-    /* 3段階のフォントサイズ定義 */
-    body.font-small .name, body.font-small .header, body.font-small .nav-btn, body.font-small .font-btn {
-        font-size: 11px;
-    }
-    body.font-medium .name, body.font-medium .header, body.font-medium .nav-btn, body.font-medium .font-btn {
-        font-size: 13px;
-    }
-    body.font-large .name, body.font-large .header, body.font-large .nav-btn, body.font-large .font-btn {
-        font-size: 16px;
-    }
+    body.font-small .name { font-size: 11px; }
+    body.font-medium .name { font-size: 13px; }
+    body.font-large .name { font-size: 15px; }
 
     .font-btn, .nav-btn {
         background: #333;
@@ -105,6 +99,7 @@
         cursor: pointer;
         font-weight: bold;
         text-align: center;
+        font-size: 12px; /* 固定サイズ */
     }
 
     .font-btn {
@@ -159,23 +154,22 @@
                 allUsers.push({ n: "ユーザー " + i, o: (i % 3 !== 0) });
             }
 
-            // 3段階のモード設定
             const fontModes = [
                 { class: "font-small", label: "文字: 小" },
                 { class: "font-medium", label: "文字: 標準" },
                 { class: "font-large", label: "文字: 大" }
             ];
 
-            let currentFontIdx = 1; // 初期値：標準
+            let currentFontIdx = 1;
             try {
                 const saved = localStorage.getItem('hud_font_idx');
-                if (saved !== null) currentFontIdx = parseInt(saved, 10);
+                if (saved !== null) {
+                    currentFontIdx = parseInt(saved, 10);
+                    if (currentFontIdx < 0 || currentFontIdx >= fontModes.length) currentFontIdx = 1;
+                }
             } catch (e) {}
 
-            function applyFont() {
-                if (currentFontIdx < 0 || currentFontIdx >= fontModes.length) {
-                    currentFontIdx = 1;
-                }
+            function applyFontSettings() {
                 const mode = fontModes[currentFontIdx];
                 document.body.className = mode.class;
                 const btn = document.getElementById('font-toggle-btn');
@@ -186,17 +180,16 @@
             }
 
             function updateDisplay() {
-                applyFont();
+                applyFontSettings();
+
                 const params = new URLSearchParams(window.location.search);
                 let pageNum = parseInt(params.get('page'), 10) || 1;
                 if (pageNum < 1) pageNum = 1;
                 if (pageNum > 5) pageNum = 5;
 
-                const pageInfo = document.getElementById('page-info');
-                if (pageInfo) pageInfo.textContent = pageNum + "/5";
+                document.getElementById('page-info').textContent = pageNum + "/5";
 
                 const container = document.getElementById('user-list');
-                if (!container) return;
                 container.innerHTML = '';
 
                 const startIdx = (pageNum - 1) * 10;
@@ -219,7 +212,7 @@
             document.getElementById('font-toggle-btn').onclick = (e) => {
                 e.stopPropagation();
                 currentFontIdx = (currentFontIdx + 1) % fontModes.length;
-                applyFont();
+                applyFontSettings();
             };
 
             document.getElementById('prev-btn').onclick = () => {
