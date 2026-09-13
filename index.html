@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <style>
+    * {
+        box-sizing: border-box;
+    }
     html, body {
         width: 320px;
         height: 512px;
@@ -14,29 +17,29 @@
         font-size: 13px;
         overflow: hidden;
         user-select: none;
-        box-sizing: border-box;
     }
 
     .wrapper {
+        position: relative;
         width: 320px;
         height: 512px;
-        display: flex;
-        flex-direction: column;
         padding: 8px;
-        box-sizing: border-box;
     }
 
     .header {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        height: 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 6px;
         font-weight: bold;
         font-size: 12px;
         color: #ccc;
         border-bottom: 1px solid #555;
         padding-bottom: 4px;
-        flex-shrink: 0;
     }
 
     .header-right {
@@ -46,11 +49,11 @@
     }
 
     #user-list {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        margin-bottom: 6px;
+        position: absolute;
+        top: 38px;
+        left: 8px;
+        right: 8px;
+        bottom: 42px;
         overflow-y: auto;
     }
 
@@ -60,9 +63,9 @@
         background: #333;
         padding: 0 8px;
         border-radius: 4px;
-        height: 24px;
-        box-sizing: border-box;
-        flex-shrink: 0;
+        height: 28px;
+        margin-bottom: 4px;
+        width: 100%;
     }
 
     .status-dot {
@@ -82,7 +85,7 @@
         text-overflow: ellipsis;
         text-align: left;
         font-size: 13px;
-        flex-grow: 1;
+        width: 250px;
     }
 
     .font-btn, .nav-btn {
@@ -105,14 +108,17 @@
     }
 
     .nav-footer {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        height: 30px;
         display: flex;
         justify-content: space-between;
-        flex-shrink: 0;
-        gap: 6px;
     }
 
     .nav-btn {
-        padding: 6px;
+        height: 30px;
         font-size: 12px;
         width: 48%;
     }
