@@ -31,16 +31,20 @@
 
     .header {
         flex-shrink: 0;
-        height: 28px;
+        height: 38px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-weight: bold;
-        color: #ccc;
         border-bottom: 1px solid #444;
         padding-bottom: 4px;
         margin-bottom: 6px;
-        font-size: 13px; /* 固定サイズ */
+    }
+
+    /* 「Status HUD」の文字を大きく変更 */
+    .header > span {
+        font-size: 20px;
+        font-weight: bold;
+        color: #fff;
     }
 
     .header-right {
@@ -79,17 +83,18 @@
     .online { background-color: #4CAF50; }
     .offline { background-color: #777; }
 
-    /* ユーザー名のフォントサイズだけが3段階で変わる */
     .name {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         text-align: left;
         flex-grow: 1;
+        font-size: 13px;
     }
+
     body.font-small .name { font-size: 11px; }
     body.font-medium .name { font-size: 13px; }
-    body.font-large .name { font-size: 15px; }
+    body.font-large .name { font-size: 16px; }
 
     .font-btn, .nav-btn {
         background: #333;
@@ -99,7 +104,7 @@
         cursor: pointer;
         font-weight: bold;
         text-align: center;
-        font-size: 12px; /* 固定サイズ */
+        font-size: 12px;
     }
 
     .font-btn {
