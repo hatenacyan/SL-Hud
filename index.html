@@ -14,7 +14,6 @@
         background-color: #1a1a1a;
         color: #fff;
         font-family: sans-serif;
-        font-size: 14px;
         overflow: hidden;
         user-select: none;
     }
@@ -27,17 +26,16 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        padding: 10px;
+        padding: 8px;
     }
 
     .header {
         flex-shrink: 0;
-        height: 30px;
+        height: 28px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         font-weight: bold;
-        font-size: 13px;
         color: #ccc;
         border-bottom: 1px solid #444;
         padding-bottom: 4px;
@@ -47,7 +45,7 @@
     .header-right {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
 
     #user-list {
@@ -62,7 +60,7 @@
         display: flex;
         align-items: center;
         background: #2a2a2a;
-        padding: 0 10px;
+        padding: 0 8px;
         border-radius: 4px;
         height: 32px;
         width: 100%;
@@ -70,10 +68,10 @@
     }
 
     .status-dot {
-        width: 9px;
-        height: 9px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
-        margin-right: 10px;
+        margin-right: 8px;
         flex-shrink: 0;
     }
 
@@ -85,8 +83,18 @@
         overflow: hidden;
         text-overflow: ellipsis;
         text-align: left;
-        font-size: 13px;
         flex-grow: 1;
+    }
+
+    /* 3段階のフォントサイズ定義 */
+    body.font-small .name, body.font-small .header, body.font-small .nav-btn, body.font-small .font-btn {
+        font-size: 11px;
+    }
+    body.font-medium .name, body.font-medium .header, body.font-medium .nav-btn, body.font-medium .font-btn {
+        font-size: 13px;
+    }
+    body.font-large .name, body.font-large .header, body.font-large .nav-btn, body.font-large .font-btn {
+        font-size: 16px;
     }
 
     .font-btn, .nav-btn {
@@ -100,8 +108,7 @@
     }
 
     .font-btn {
-        padding: 3px 8px;
-        font-size: 12px;
+        padding: 2px 6px;
     }
 
     .font-btn:active, .nav-btn:active {
@@ -110,7 +117,7 @@
 
     .nav-footer {
         flex-shrink: 0;
-        height: 36px;
+        height: 32px;
         display: flex;
         justify-content: space-between;
         margin-top: 6px;
@@ -118,7 +125,6 @@
 
     .nav-btn {
         height: 100%;
-        font-size: 13px;
         width: 48%;
     }
 
@@ -131,7 +137,7 @@
     }
 </style>
 </head>
-<body>
+<body class="font-medium">
     <div class="wrapper">
         <div class="header">
             <span>Status HUD</span>
@@ -153,28 +159,34 @@
                 allUsers.push({ n: "ユーザー " + i, o: (i % 3 !== 0) });
             }
 
-            let fontSizeLevel = 0;
-            try {
-                fontSizeLevel = parseInt(localStorage.getItem('hud_font_level'), 10) || 0;
-            } catch (e) {}
-
-            const fontSettings = [
-                { label: "文字: 標準", size: "14px" },
-                { label: "文字: 大", size: "16px" }
+            // 3段階のモード設定
+            const fontModes = [
+                { class: "font-small", label: "文字: 小" },
+                { class: "font-medium", label: "文字: 標準" },
+                { class: "font-large", label: "文字: 大" }
             ];
 
-            function applyFontSize() {
-                const setting = fontSettings[fontSizeLevel] || fontSettings[0];
-                document.documentElement.style.fontSize = setting.size;
+            let currentFontIdx = 1; // 初期値：標準
+            try {
+                const saved = localStorage.getItem('hud_font_idx');
+                if (saved !== null) currentFontIdx = parseInt(saved, 10);
+            } catch (e) {}
+
+            function applyFont() {
+                if (currentFontIdx < 0 || currentFontIdx >= fontModes.length) {
+                    currentFontIdx = 1;
+                }
+                const mode = fontModes[currentFontIdx];
+                document.body.className = mode.class;
                 const btn = document.getElementById('font-toggle-btn');
-                if (btn) btn.textContent = setting.label;
+                if (btn) btn.textContent = mode.label;
                 try {
-                    localStorage.setItem('hud_font_level', fontSizeLevel);
+                    localStorage.setItem('hud_font_idx', currentFontIdx);
                 } catch (e) {}
             }
 
             function updateDisplay() {
-                applyFontSize();
+                applyFont();
                 const params = new URLSearchParams(window.location.search);
                 let pageNum = parseInt(params.get('page'), 10) || 1;
                 if (pageNum < 1) pageNum = 1;
@@ -204,6 +216,12 @@
                 });
             }
 
+            document.getElementById('font-toggle-btn').onclick = (e) => {
+                e.stopPropagation();
+                currentFontIdx = (currentFontIdx + 1) % fontModes.length;
+                applyFont();
+            };
+
             document.getElementById('prev-btn').onclick = () => {
                 const params = new URLSearchParams(window.location.search);
                 let pageNum = parseInt(params.get('page'), 10) || 1;
@@ -220,12 +238,6 @@
                 window.location.search = '?page=' + next;
             };
 
-            document.getElementById('font-toggle-btn').onclick = () => {
-                fontSizeLevel = (fontSizeLevel + 1) % fontSettings.length;
-                applyFontSize();
-                updateDisplay();
-            };
-            
             updateDisplay();
         } catch (err) {
             document.getElementById('user-list').innerHTML = '<div class="error-box">JSエラー: ' + err.message + '</div>';
