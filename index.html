@@ -30,20 +30,17 @@
         padding: 0 8px; border-radius: 4px; height: 36px; width: 100%; flex-shrink: 0;
     }
     
-    /* オンライン/オフラインの丸（緑丸・赤丸） */
     .status-dot {
         width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; flex-shrink: 0;
     }
     .online { background-color: #4CAF50; box-shadow: 0 0 4px #4CAF50; }
     .offline { background-color: #F44336; }
 
-    /* アイコン画像 */
     .avatar-icon {
         width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
         margin-right: 8px; flex-shrink: 0; background-color: #444;
     }
 
-    /* プロフィールを開くリンク */
     .name-link {
         color: #fff; text-decoration: none; white-space: nowrap;
         overflow: hidden; text-overflow: ellipsis; text-align: left;
@@ -51,7 +48,6 @@
     }
     .name-link:hover { color: #4CAF50; text-decoration: underline; }
 
-    /* フォントサイズ切替（表示名とユーザー名のバランスを考慮） */
     body.font-small .name-link { font-size: 11px; }
     body.font-medium .name-link { font-size: 13px; }
     body.font-large .name-link { font-size: 15px; }
@@ -59,17 +55,27 @@
     .display-name { font-weight: bold; }
     .user-name { color: #aaa; font-size: 0.9em; margin-left: 4px; }
 
-    .font-btn, .nav-btn {
+    .font-btn, .nav-btn, .setup-btn {
         background: #333; color: #fff; border: 1px solid #555;
         border-radius: 4px; cursor: pointer; font-weight: bold; text-align: center; font-size: 12px;
     }
     .font-btn { padding: 2px 6px; }
-    .font-btn:active, .nav-btn:active { background: #555; }
+    .font-btn:active, .nav-btn:active, .setup-btn:active { background: #555; }
+    
     .nav-footer {
         flex-shrink: 0; height: 32px; display: flex; justify-content: space-between; margin-top: 6px;
     }
     .nav-btn { height: 100%; width: 48%; }
-    .error-box { color: #ff6b6b; padding: 10px; background: #400; border-radius: 4px; word-break: break-all; }
+    
+    .error-box {
+        color: #ff6b6b; padding: 12px; background: #400; border-radius: 4px;
+        font-size: 12px; line-height: 1.4; word-break: break-all;
+    }
+    .setup-input {
+        width: 100%; padding: 6px; margin-top: 6px; margin-bottom: 6px;
+        background: #222; color: #fff; border: 1px solid #666; border-radius: 4px; font-size: 11px;
+    }
+    .setup-btn { width: 100%; padding: 6px; margin-top: 4px; background: #2e7d32; border-color: #43a047; }
 </style>
 </head>
 <body class="font-medium">
@@ -81,7 +87,7 @@
                 <span id="page-info">1/5</span>
             </div>
         </div>
-        <div id="user-list">データを取得中...</div>
+        <div id="user-list">読み込み中...</div>
         <div class="nav-footer">
             <button class="nav-btn" id="prev-btn">◀ 前へ</button>
             <button class="nav-btn" id="next-btn">次へ ▶</button>
@@ -91,16 +97,57 @@
         (async function() {
             let allUsers = [];
             const urlParams = new URLSearchParams(window.location.search);
-            const backendUrl = urlParams.get('backend');
+            let backendUrl = urlParams.get('backend');
+
+            // URLパラメータにない場合はローカルストレージから取得
+            if (!backendUrl) {
+                try {
+                    backendUrl = localStorage.getItem('hud_backend_url');
+                } catch (e) {}
+            } else {
+                // パラメータにあれば保存しておく
+                try {
+                    localStorage.setItem('hud_backend_url', backendUrl);
+                } catch (e) {}
+            }
+
+            const container = document.getElementById('user-list');
+
+            if (!backendUrl) {
+                container.innerHTML = `
+                    <div class="error-box">
+                        <strong>バックエンドURL未設定</strong><br>
+                        LSLオブジェクトのチャットに表示された長めのURLをコピーして、下の欄に貼り付けてください：
+                        <input type="text" id="backend-input" class="setup-input" placeholder="https://... ?backend=...">
+                        <button id="backend-save" class="setup-btn">接続する</button>
+                    </div>
+                `;
+                document.getElementById('backend-save').onclick = () => {
+                    const val = document.getElementById('backend-input').value.trim();
+                    if (val) {
+                        try { localStorage.setItem('hud_backend_url', val); } catch (e) {}
+                        window.location.href = window.location.pathname + '?backend=' + encodeURIComponent(val);
+                    }
+                };
+                return;
+            }
 
             try {
-                if (!backendUrl) throw new Error('LSLバックエンドURLが指定されていません');
                 const response = await fetch(backendUrl);
                 if (!response.ok) throw new Error('LSLからのデータ取得に失敗しました');
                 const data = await response.json();
                 allUsers = data.users || [];
             } catch (err) {
-                document.getElementById('user-list').innerHTML = '<div class="error-box">' + err.message + '</div>';
+                container.innerHTML = `
+                    <div class="error-box">
+                        通信エラーが発生しました。<br>${err.message}<br>
+                        <button id="reset-url" class="setup-btn" style="margin-top:8px;">URLを再設定する</button>
+                    </div>
+                `;
+                document.getElementById('reset-url').onclick = () => {
+                    try { localStorage.removeItem('hud_backend_url'); } catch (e) {}
+                    window.location.reload();
+                };
                 return;
             }
 
@@ -130,7 +177,6 @@
                 if (pageNum > 5) pageNum = 5;
 
                 document.getElementById('page-info').textContent = pageNum + "/5";
-                const container = document.getElementById('user-list');
                 container.innerHTML = '';
 
                 const startIdx = (pageNum - 1) * 10;
@@ -145,29 +191,25 @@
                     const row = document.createElement('div');
                     row.className = 'user-row';
                     
-                    // 1. オンライン状態の丸 (緑丸 / 赤丸)
                     const dot = document.createElement('div');
                     dot.className = 'status-dot ' + (user.o ? 'online' : 'offline');
                     
-                    // 2. プロフィールアイコン画像
                     const icon = document.createElement('img');
                     icon.className = 'avatar-icon';
-                    // セカンドライフのテクスチャUUIDから画像URLを生成
-                    icon.src = user.img ? ('https://cap.secondlife.com/cap/0/ ' + user.img) : ''; // ※テクスチャURL形式に準拠
-                    icon.onerror = () => { icon.style.display = 'none'; }; // 画像がない場合は非表示に
+                    icon.src = user.img ? ('https://cap.secondlife.com/cap/0/' + user.img) : '';
+                    icon.onerror = () => { icon.style.display = 'none'; };
                     
-                    // 3. 名前リンク (表示名 + ユーザー名)
                     const nameLink = document.createElement('a');
                     nameLink.className = 'name-link';
                     nameLink.href = 'secondlife:///app/agent/' + user.uuid + '/about';
                     
                     const dSpan = document.createElement('span');
                     dSpan.className = 'display-name';
-                    dSpan.textContent = user.dname; // 表示名
+                    dSpan.textContent = user.dname;
                     
                     const uSpan = document.createElement('span');
                     uSpan.className = 'user-name';
-                    uSpan.textContent = '(' + user.uname + ')'; // ユーザー名
+                    uSpan.textContent = '(' + user.uname + ')';
                     
                     nameLink.appendChild(dSpan);
                     nameLink.appendChild(uSpan);
