@@ -1,85 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset='UTF-8'>
-<style>
-* { box-sizing: border-box; }
-html, body { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #1a1a1a; color: #fff; overflow: hidden; user-select: none; }
-
-body.font-meiryo { font-family: 'Meiryo', sans-serif; }
-body.font-gothic { font-family: 'MS Gothic', 'Osaka', sans-serif; }
-body.font-rounded { font-family: 'Rounded Mplus 1c', 'Hiragino Maru Gothic ProN', sans-serif; }
-body.font-mincho { font-family: 'MS Mincho', serif; }
-
-.wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 8px; }
-
-.header { flex-shrink: 0; height: 38px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 6px; }
-.header-controls { display: flex; gap: 6px; align-items: center; }
-#user-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-.user-row { display: flex; align-items: center; background: #2a2a2a; padding: 0 8px; border-radius: 4px; height: 36px; width: 100%; flex-shrink: 0; }
-
-.status-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
-.status-dot.online { background-color: #00ff66; box-shadow: 0 0 6px #00ff66; }
-.status-dot.offline { background-color: #555555; }
-
-.avatar-icon { width: 24px; height: 24px; border-radius: 50%; background: #4a5568; color: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 8px; flex-shrink: 0; border: 1px solid #718096; }
-
-.name-link { color: #fff; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; cursor: pointer; font-weight: bold; }
-.name-link:hover { color: #4CAF50; text-decoration: underline; }
-
-body.size-small .name-link { font-size: 11px; }
-body.size-medium .name-link { font-size: 13px; }
-body.size-large .name-link { font-size: 15px; }
-
-.ctrl-btn, .ctrl-select { background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 6px; }
-.close-btn { background: #552222; color: #ff9999; border: 1px solid #773333; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 8px; cursor: pointer; margin-left: 2px; }
-.close-btn:hover { background: #772222; color: #fff; }
-
-.footer { flex-shrink: 0; height: 32px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 4px; margin-top: 6px; }
-</style>
-</head>
-<body class='font-meiryo size-medium'>
-<div class='wrapper'>
-    <div class='header'><span id='header-title'>Status</span>
-        <div class='header-controls'>
-            <select class='ctrl-select' id='interval-select'>
-                <option value='10'>10秒</option>
-                <option value='30'>30秒</option>
-                <option value='60'>1分</option>
-                <option value='180'>3分</option>
-                <option value='300' selected>5分</option>
-                <option value='600'>10分</option>
-                <option value='900'>15分</option>
-            </select>
-            <select class='ctrl-select' id='size-select'>
-                <option value='size-small'>小</option>
-                <option value='size-medium' selected>標準</option>
-                <option value='size-large'>大</option>
-            </select>
-            <select class='ctrl-select' id='font-select'>
-                <option value='font-meiryo' selected>メイリオ</option>
-                <option value='font-gothic'>ゴシック</option>
-                <option value='font-rounded'>丸ゴシック</option>
-                <option value='font-mincho'>明朝</option>
-            </select>
-            <button class='close-btn' id='close-btn'>×</button>
-        </div>
-    </div>
-    <div id='user-list'>読み込み中...</div>
-    <div class='footer'>
-        <button class='ctrl-btn' id='prev-page'>◀ 前へ</button>
-        <span id='page-indicator' style='font-size:12px; font-weight:bold;'>1 / 1 ページ</span>
-        <button class='ctrl-btn' id='next-page'>次へ ▶</button>
-    </div>
-</div>
-
 <script>
 let currentPage = 0;
 const itemsPerPage = 10;
 let cachedData = null;
 
 const urlParams = new URLSearchParams(window.location.search);
-const slServer = urlParams.get('sl_url'); // Second LifeのLSLサーバーURLを受け取る
+const slServer = urlParams.get('sl_url');
+
+if (!slServer) {
+    document.getElementById('user-list').innerHTML = "<div style='color:#ff6b6b;padding:8px;'>バックエンドURL未設定（Second LifeのHUDから開いてください）</div>";
+}
 
 function renderList() {
     if (!cachedData) return;
@@ -133,6 +62,23 @@ function renderList() {
     document.getElementById('page-indicator').textContent = (currentPage + 1) + ' / ' + totalPages + ' ページ';
 }
 
+// JSONP用のコールバック関数
+function handleData(data) {
+    cachedData = data;
+    renderList();
+}
+
+function updateStatuses() {
+    if (!slServer) return;
+    const oldScript = document.getElementById('jsonp-script');
+    if (oldScript) oldScript.remove();
+
+    const script = document.createElement('script');
+    script.id = 'jsonp-script';
+    script.src = slServer + '/api/data?callback=handleData';
+    document.body.appendChild(script);
+}
+
 document.getElementById('prev-page').onclick = () => {
     if (!cachedData) return;
     const totalPages = Math.max(1, Math.ceil(cachedData.users.length / itemsPerPage));
@@ -169,19 +115,6 @@ document.getElementById('close-btn').onclick = () => {
     }
 };
 
-function updateStatuses() {
-    if (!slServer) return;
-    fetch(slServer + '/api/data')
-        .then(r => r.json())
-        .then(data => {
-            cachedData = data;
-            renderList();
-        })
-        .catch(e => {});
-}
-
 setInterval(updateStatuses, 2500);
 updateStatuses();
 </script>
-</body>
-</html>
