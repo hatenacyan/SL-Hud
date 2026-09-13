@@ -94,48 +94,51 @@
         </div>
     </div>
     <script>
-        let allUsers = [];
-        const urlParams = new URLSearchParams(window.location.search);
-        let backendUrl = urlParams.get('backend');
+        (async function() {
+            let allUsers = [];
+            const urlParams = new URLSearchParams(window.location.search);
+            let backendUrl = urlParams.get('backend');
 
-        if (!backendUrl) {
-            try { backendUrl = localStorage.getItem('hud_backend_url'); } catch (e) {}
-        } else {
-            try { localStorage.setItem('hud_backend_url', backendUrl); } catch (e) {}
-        }
+            if (!backendUrl) {
+                try {
+                    backendUrl = localStorage.getItem('hud_backend_url');
+                } catch (e) {}
+            } else {
+                try {
+                    localStorage.setItem('hud_backend_url', backendUrl);
+                } catch (e) {}
+            }
 
-        const container = document.getElementById('user-list');
+            const container = document.getElementById('user-list');
 
-        if (!backendUrl) {
-            container.innerHTML = `
-                <div class="error-box">
-                    <strong>バックエンドURL未設定</strong><br>
-                    オブジェクトのチャットに表示されたURLを貼り付けてください：
-                    <input type="text" id="backend-input" class="setup-input" placeholder="https://... ?backend=...">
-                    <button id="backend-save" class="setup-btn">接続する</button>
-                </div>
-            `;
-            document.getElementById('backend-save').onclick = () => {
-                const val = document.getElementById('backend-input').value.trim();
-                if (val) {
-                    try { localStorage.setItem('hud_backend_url', val); } catch (e) {}
-                    window.location.href = window.location.pathname + '?backend=' + encodeURIComponent(val);
-                }
-            };
-        } else {
-            // JSONP方式でLSLからデータを取得するためのグローバル関数
-            window.onUserDataLoaded = function(data) {
-                allUsers = data.users || [];
-                initUI();
-            };
-
-            // スクリプトタグを動的に挿入してCORS制限を回避
-            const script = document.createElement('script');
-            script.src = backendUrl + (backendUrl.includes('?') ? '&' : '?') + 'callback=onUserDataLoaded';
-            script.onerror = () => {
+            if (!backendUrl) {
                 container.innerHTML = `
                     <div class="error-box">
-                        通信エラーが発生しました。<br>URLが無効か、サーバーが応答していません。<br>
+                        <strong>バックエンドURL未設定</strong><br>
+                        オブジェクトのチャットに表示されたURLを貼り付けてください：
+                        <input type="text" id="backend-input" class="setup-input" placeholder="https://... ?backend=...">
+                        <button id="backend-save" class="setup-btn">接続する</button>
+                    </div>
+                `;
+                document.getElementById('backend-save').onclick = () => {
+                    const val = document.getElementById('backend-input').value.trim();
+                    if (val) {
+                        try { localStorage.setItem('hud_backend_url', val); } catch (e) {}
+                        window.location.href = window.location.pathname + '?backend=' + encodeURIComponent(val);
+                    }
+                };
+                return;
+            }
+
+            try {
+                const response = await fetch(backendUrl);
+                if (!response.ok) throw new Error('LSLからのデータ取得に失敗しました');
+                const data = await response.json();
+                allUsers = data.users || [];
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="error-box">
+                        通信エラーが発生しました。<br>${err.message}<br>
                         <button id="reset-url" class="setup-btn" style="margin-top:8px;">URLを再設定する</button>
                     </div>
                 `;
@@ -143,11 +146,9 @@
                     try { localStorage.removeItem('hud_backend_url'); } catch (e) {}
                     window.location.reload();
                 };
-            };
-            document.head.appendChild(script);
-        }
+                return;
+            }
 
-        function initUI() {
             const fontModes = [
                 { class: "font-small", label: "文字: 小" },
                 { class: "font-medium", label: "文字: 標準" },
@@ -239,7 +240,7 @@
             };
 
             updateDisplay();
-        }
+        })();
     </script>
 </body>
 </html>
