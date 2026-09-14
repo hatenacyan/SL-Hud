@@ -1,10 +1,17 @@
 let currentPage = 0;
 const itemsPerPage = 10;
 let cachedData = null;
-const listContainer = document.getElementById('user-list');
+
+// LSLから渡されたベースURLを取得（設定されていなければ現在のオリジン）
+const API_BASE = window.LSL_SERVER_URL || "";
+
+function getListContainer() {
+  return document.getElementById('user-list');
+}
 
 function buildRows(statuses) {
   if (!cachedData) return;
+  const listContainer = getListContainer();
   const len = cachedData.uuids.length;
   if (len === 0) {
     listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>登録ユーザーがいません</div>";
@@ -47,50 +54,57 @@ function updateAndSort(statuses) {
   buildRows(statuses);
 }
 
-document.getElementById('prev-page').onclick = () => {
-  if (!cachedData) return;
-  const totalPages = Math.max(1, Math.ceil(cachedData.uuids.length / itemsPerPage));
-  currentPage = (currentPage - 1 + totalPages) % totalPages;
-  updateStatuses();
-};
+function initEvents() {
+  document.getElementById('prev-page').onclick = () => {
+    if (!cachedData) return;
+    const totalPages = Math.max(1, Math.ceil(cachedData.uuids.length / itemsPerPage));
+    currentPage = (currentPage - 1 + totalPages) % totalPages;
+    updateStatuses();
+  };
 
-document.getElementById('next-page').onclick = () => {
-  if (!cachedData) return;
-  const totalPages = Math.max(1, Math.ceil(cachedData.uuids.length / itemsPerPage));
-  currentPage = (currentPage + 1) % totalPages;
-  updateStatuses();
-};
+  document.getElementById('next-page').onclick = () => {
+    if (!cachedData) return;
+    const totalPages = Math.max(1, Math.ceil(cachedData.uuids.length / itemsPerPage));
+    currentPage = (currentPage + 1) % totalPages;
+    updateStatuses();
+  };
 
-document.getElementById('size-select').onchange = (e) => {
-  document.body.classList.remove('size-small', 'size-medium', 'size-large');
-  document.body.classList.add(e.target.value);
-  fetch('/api/set_size?val=' + e.target.value).catch(err => {});
-};
+  document.getElementById('size-select').onchange = (e) => {
+    document.body.classList.remove('size-small', 'size-medium', 'size-large');
+    document.body.classList.add(e.target.value);
+    fetch(API_BASE + '/api/set_size?val=' + e.target.value).catch(err => {});
+  };
 
-document.getElementById('font-select').onchange = (e) => {
-  document.body.classList.remove('font-meiryo', 'font-gothic', 'font-rounded', 'font-mincho');
-  document.body.classList.add(e.target.value);
-  fetch('/api/set_font?val=' + e.target.value).catch(err => {});
-};
+  document.getElementById('font-select').onchange = (e) => {
+    document.body.classList.remove('font-meiryo', 'font-gothic', 'font-rounded', 'font-mincho');
+    document.body.classList.add(e.target.value);
+    fetch(API_BASE + '/api/set_font?val=' + e.target.value).catch(err => {});
+  };
 
-document.getElementById('interval-select').onchange = (e) => {
-  fetch('/api/set_interval?sec=' + e.target.value).catch(err => {});
-};
+  document.getElementById('interval-select').onchange = (e) => {
+    fetch(API_BASE + '/api/set_interval?sec=' + e.target.value).catch(err => {});
+  };
 
-document.getElementById('close-btn').onclick = () => {
-  fetch('/api/detach').catch(err => {});
-};
+  document.getElementById('close-btn').onclick = () => {
+    fetch(API_BASE + '/api/detach').catch(err => {});
+  };
+}
 
 function updateStatuses() {
-  fetch('/api/status')
+  fetch(API_BASE + '/api/status')
     .then(r => r.json())
     .then(data => updateAndSort(data))
     .catch(e => {});
 }
 
-// 初期化実行
-fetch('/api/users')
-  .then(r => r.json())
+// 実行開始
+initEvents();
+
+fetch(API_BASE + '/api/users')
+  .then(r => {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  })
   .then(data => {
     cachedData = data;
     document.getElementById('header-title').textContent = 'Online-Tracker (' + data.uuids.length + ')';
@@ -113,5 +127,5 @@ fetch('/api/users')
     setInterval(updateStatuses, 2500);
   })
   .catch(err => {
-    listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>初期データ取得エラー</div>";
+    getListContainer().innerHTML = "<div style='color:#ff6b6b;padding:8px;'>初期データ取得エラー: " + err.message + "</div>";
   });
