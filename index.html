@@ -1,92 +1,21 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>Online Tracker</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #1a1a1a; color: #fff; overflow: hidden; user-select: none; }
-    body.font-meiryo { font-family: 'Meiryo', sans-serif; }
-    body.font-gothic { font-family: 'MS Gothic', 'Osaka', sans-serif; }
-    body.font-rounded { font-family: 'Rounded Mplus 1c', 'Hiragino Maru Gothic ProN', sans-serif; }
-    body.font-mincho { font-family: 'MS Mincho', serif; }
-    
-    .wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 8px; }
-    .header { flex-shrink: 0; height: 38px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 6px; }
-    .header-controls { display: flex; gap: 6px; align-items: center; }
-    #user-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-    .user-row { display: flex; align-items: center; background: #2a2a2a; padding: 0 8px; border-radius: 4px; height: 36px; width: 100%; flex-shrink: 0; }
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
-    .status-dot.online { background-color: #00ff66; box-shadow: 0 0 6px #00ff66; }
-    .status-dot.offline { background-color: #555555; }
-    .avatar-icon { width: 24px; height: 24px; border-radius: 50%; background: #4a5568; color: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 8px; flex-shrink: 0; border: 1px solid #718096; }
-    .name-link { color: #fff; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; cursor: pointer; font-weight: bold; }
-    .name-link:hover { color: #4CAF50; text-decoration: underline; }
-    
-    body.size-small .name-link { font-size: 20px; }
-    body.size-medium .name-link { font-size: 24px; }
-    body.size-large .name-link { font-size: 28px; }
-    
-    .ctrl-btn, .ctrl-select { background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 6px; }
-    .close-btn { background: #552222; color: #ff9999; border: 1px solid #773333; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 8px; cursor: pointer; margin-left: 2px; }
-    .close-btn:hover { background: #772222; color: #fff; }
-    .footer { flex-shrink: 0; height: 32px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 4px; margin-top: 6px; }
-  </style>
-</head>
-<body class="font-meiryo size-medium">
-  <div class="wrapper">
-    <div class="header">
-      <span id="header-title">Online-Tracker (...)</span>
-      <div class="header-controls">
-        <select class="ctrl-select" id="interval-select">
-          <option value="10">10秒</option>
-          <option value="30">30秒</option>
-          <option value="60">1分</option>
-          <option value="180">3分</option>
-          <option value="300">5分</option>
-          <option value="600">10分</option>
-          <option value="900">15分</option>
-        </select>
-        <select class="ctrl-select" id="size-select">
-          <option value="size-small">小</option>
-          <option value="size-medium" selected>標準</option>
-          <option value="size-large">大</option>
-        </select>
-        <select class="ctrl-select" id="font-select">
-          <option value="font-meiryo" selected>メイリオ</option>
-          <option value="font-gothic">ゴシック</option>
-          <option value="font-rounded">丸ゴシック</option>
-          <option value="font-mincho">明朝</option>
-        </select>
-        <button class="close-btn" id="close-btn">×</button>
-      </div>
-    </div>
-    
-    <div id="user-list"></div>
-    
-    <div class="footer">
-      <button class="ctrl-btn" id="prev-page">◀ 前へ</button>
-      <span id="page-indicator" style="font-size:12px; font-weight:bold;">1 / 1 ページ</span>
-      <button class="ctrl-btn" id="next-page">次へ ▶</button>
-    </div>
-  </div>
-
-  <script>
-    // URLのパラメータからSL内HTTP-inのURLを取得
+<script>
+    // URLパラメータからサーバーURLを取得
     const urlParams = new URLSearchParams(window.location.search);
     const serverUrl = urlParams.get('server');
 
     let currentPage = 0;
     const itemsPerPage = 10;
     let cachedData = null;
+    const listContainer = document.getElementById('user-list');
 
     if (!serverUrl) {
-      document.getElementById('user-list').innerHTML = "<div style='color:#ff6b6b;padding:8px;'>サーバーURLが指定されていません。</div>";
+      listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>エラー: サーバーURLが取得できませんでした。</div>";
+    } else {
+      listContainer.innerHTML = "<div style='color:#aaa;padding:8px;'>ユーザーデータを取得中...<br><span style='font-size:10px;word-break:break-all;'>" + serverUrl + "</span></div>";
     }
 
     function buildRows(statuses) {
       if (!cachedData) return;
-      const listContainer = document.getElementById('user-list');
       const len = cachedData.uuids.length;
       if (len === 0) {
         listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>登録ユーザーがいません</div>";
@@ -168,17 +97,21 @@
       fetch(serverUrl + '/api/status')
         .then(r => r.json())
         .then(data => updateAndSort(data))
-        .catch(e => {});
+        .catch(e => {
+          console.error("Status fetch failed:", e);
+        });
     }
 
     if (serverUrl) {
       fetch(serverUrl + '/api/users')
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) throw new Error("HTTP error " + r.status);
+          return r.json();
+        })
         .then(data => {
           cachedData = data;
           document.getElementById('header-title').textContent = 'Online-Tracker (' + data.uuids.length + ')';
           
-          // LSL側の設定値をUIに反映
           if (data.settings) {
             if (data.settings.interval) document.getElementById('interval-select').value = String(data.settings.interval);
             if (data.settings.size) {
@@ -196,8 +129,8 @@
           updateStatuses();
           setInterval(updateStatuses, 2500);
         })
-        .catch(e => {});
+        .catch(err => {
+          listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>通信エラー: LSLサーバーからデータを取得できません。<br><span style='font-size:11px;color:#fff;'>" + err.message + "</span></div>";
+        });
     }
   </script>
-</body>
-</html>
