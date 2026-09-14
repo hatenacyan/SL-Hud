@@ -1,201 +1,203 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-<meta charset='UTF-8'>
-<style>
-* { box-sizing: border-box; }
-html, body { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #1a1a1a; color: #fff; overflow: hidden; user-select: none; }
-
-body.font-meiryo { font-family: 'Meiryo', sans-serif; }
-body.font-gothic { font-family: 'MS Gothic', 'Osaka', sans-serif; }
-body.font-rounded { font-family: 'Rounded Mplus 1c', 'Hiragino Maru Gothic ProN', sans-serif; }
-body.font-mincho { font-family: 'MS Mincho', serif; }
-
-.wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 8px; }
-
-.header { flex-shrink: 0; height: 38px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 6px; }
-.header-controls { display: flex; gap: 6px; align-items: center; }
-#user-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-.user-row { display: flex; align-items: center; background: #2a2a2a; padding: 0 8px; border-radius: 4px; height: 36px; width: 100%; flex-shrink: 0; }
-
-.status-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
-.status-dot.online { background-color: #00ff66; box-shadow: 0 0 6px #00ff66; }
-.status-dot.offline { background-color: #555555; }
-
-.avatar-icon { width: 24px; height: 24px; border-radius: 50%; background: #4a5568; color: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 8px; flex-shrink: 0; border: 1px solid #718096; }
-
-.name-link { color: #fff; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; cursor: pointer; font-weight: bold; }
-.name-link:hover { color: #4CAF50; text-decoration: underline; }
-
-body.size-small .name-link { font-size: 11px; }
-body.size-medium .name-link { font-size: 13px; }
-body.size-large .name-link { font-size: 15px; }
-
-.ctrl-btn, .ctrl-select { background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 6px; }
-.close-btn { background: #552222; color: #ff9999; border: 1px solid #773333; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 8px; cursor: pointer; margin-left: 2px; }
-.close-btn:hover { background: #772222; color: #fff; }
-
-.footer { flex-shrink: 0; height: 32px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 4px; margin-top: 6px; }
-</style>
-</head>
-<body class='font-meiryo size-medium'>
-<div class='wrapper'>
-    <div class='header'><span id='header-title'>Status</span>
-        <div class='header-controls'>
-            <select class='ctrl-select' id='interval-select'>
-                <option value='10'>10秒</option>
-                <option value='30'>30秒</option>
-                <option value='60'>1分</option>
-                <option value='180'>3分</option>
-                <option value='300' selected>5分</option>
-                <option value='600'>10分</option>
-                <option value='900'>15分</option>
-            </select>
-            <select class='ctrl-select' id='size-select'>
-                <option value='size-small'>小</option>
-                <option value='size-medium' selected>標準</option>
-                <option value='size-large'>大</option>
-            </select>
-            <select class='ctrl-select' id='font-select'>
-                <option value='font-meiryo' selected>メイリオ</option>
-                <option value='font-gothic'>ゴシック</option>
-                <option value='font-rounded'>丸ゴシック</option>
-                <option value='font-mincho'>明朝</option>
-            </select>
-            <button class='close-btn' id='close-btn'>×</button>
-        </div>
-    </div>
-    <div id='user-list'>接続待機中...</div>
-    <div class='footer'>
-        <button class='ctrl-btn' id='prev-page'>◀ 前へ</button>
-        <span id='page-indicator' style='font-size:12px; font-weight:bold;'>1 / 1 ページ</span>
-        <button class='ctrl-btn' id='next-page'>次へ ▶</button>
-    </div>
-</div>
-
-<script>
-let currentPage = 0;
-const itemsPerPage = 10;
-let cachedData = null;
-
-const urlParams = new URLSearchParams(window.location.search);
-const slServer = urlParams.get('sl_url');
-
-if (!slServer) {
-    document.getElementById('user-list').innerHTML = "<div style='color:#ff6b6b;padding:8px;'>バックエンドURL未設定（Second LifeのHUDから開いてください）</div>";
-}
-
-function renderList() {
-    if (!cachedData || !cachedData.users) return;
-    const listContainer = document.getElementById('user-list');
-    listContainer.innerHTML = '';
+  <meta charset="UTF-8">
+  <title>Online Tracker</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #1a1a1a; color: #fff; overflow: hidden; user-select: none; }
+    body.font-meiryo { font-family: 'Meiryo', sans-serif; }
+    body.font-gothic { font-family: 'MS Gothic', 'Osaka', sans-serif; }
+    body.font-rounded { font-family: 'Rounded Mplus 1c', 'Hiragino Maru Gothic ProN', sans-serif; }
+    body.font-mincho { font-family: 'MS Mincho', serif; }
     
-    document.getElementById('header-title').textContent = 'Status (' + cachedData.users.length + ')';
+    .wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 8px; }
+    .header { flex-shrink: 0; height: 38px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 6px; }
+    .header-controls { display: flex; gap: 6px; align-items: center; }
+    #user-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .user-row { display: flex; align-items: center; background: #2a2a2a; padding: 0 8px; border-radius: 4px; height: 36px; width: 100%; flex-shrink: 0; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+    .status-dot.online { background-color: #00ff66; box-shadow: 0 0 6px #00ff66; }
+    .status-dot.offline { background-color: #555555; }
+    .avatar-icon { width: 24px; height: 24px; border-radius: 50%; background: #4a5568; color: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 8px; flex-shrink: 0; border: 1px solid #718096; }
+    .name-link { color: #fff; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; cursor: pointer; font-weight: bold; }
+    .name-link:hover { color: #4CAF50; text-decoration: underline; }
+    
+    body.size-small .name-link { font-size: 20px; }
+    body.size-medium .name-link { font-size: 24px; }
+    body.size-large .name-link { font-size: 28px; }
+    
+    .ctrl-btn, .ctrl-select { background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 6px; }
+    .close-btn { background: #552222; color: #ff9999; border: 1px solid #773333; border-radius: 4px; font-weight: bold; font-size: 11px; padding: 3px 8px; cursor: pointer; margin-left: 2px; }
+    .close-btn:hover { background: #772222; color: #fff; }
+    .footer { flex-shrink: 0; height: 32px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 4px; margin-top: 6px; }
+  </style>
+</head>
+<body class="font-meiryo size-medium">
+  <div class="wrapper">
+    <div class="header">
+      <span id="header-title">Online-Tracker (...)</span>
+      <div class="header-controls">
+        <select class="ctrl-select" id="interval-select">
+          <option value="10">10秒</option>
+          <option value="30">30秒</option>
+          <option value="60">1分</option>
+          <option value="180">3分</option>
+          <option value="300">5分</option>
+          <option value="600">10分</option>
+          <option value="900">15分</option>
+        </select>
+        <select class="ctrl-select" id="size-select">
+          <option value="size-small">小</option>
+          <option value="size-medium" selected>標準</option>
+          <option value="size-large">大</option>
+        </select>
+        <select class="ctrl-select" id="font-select">
+          <option value="font-meiryo" selected>メイリオ</option>
+          <option value="font-gothic">ゴシック</option>
+          <option value="font-rounded">丸ゴシック</option>
+          <option value="font-mincho">明朝</option>
+        </select>
+        <button class="close-btn" id="close-btn">×</button>
+      </div>
+    </div>
+    
+    <div id="user-list"></div>
+    
+    <div class="footer">
+      <button class="ctrl-btn" id="prev-page">◀ 前へ</button>
+      <span id="page-indicator" style="font-size:12px; font-weight:bold;">1 / 1 ページ</span>
+      <button class="ctrl-btn" id="next-page">次へ ▶</button>
+    </div>
+  </div>
 
-    let rows = cachedData.users.map((u, i) => {
-        let st = (cachedData.statuses && cachedData.statuses[i]) ? cachedData.statuses[i] : '0';
-        return {
-            index: i,
-            uuid: u.uuid,
-            name: u.name,
-            status: st === '1' ? '1' : '0'
-        };
-    });
+  <script>
+    // URLのパラメータからSL内HTTP-inのURLを取得
+    const urlParams = new URLSearchParams(window.location.search);
+    const serverUrl = urlParams.get('server');
 
-    rows.sort((a, b) => {
-        if (a.status !== b.status) {
-            return parseInt(b.status) - parseInt(a.status);
-        }
-        return a.index - b.index;
-    });
+    let currentPage = 0;
+    const itemsPerPage = 10;
+    let cachedData = null;
 
-    const totalPages = Math.max(1, Math.ceil(rows.length / itemsPerPage));
-    if (currentPage >= totalPages) currentPage = totalPages - 1;
+    if (!serverUrl) {
+      document.getElementById('user-list').innerHTML = "<div style='color:#ff6b6b;padding:8px;'>サーバーURLが指定されていません。</div>";
+    }
 
-    const startIdx = currentPage * itemsPerPage;
-    const pageRows = rows.slice(startIdx, startIdx + itemsPerPage);
-
-    if (rows.length === 0) {
-        listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>有効なユーザーが見つかりません</div>";
+    function buildRows(statuses) {
+      if (!cachedData) return;
+      const listContainer = document.getElementById('user-list');
+      const len = cachedData.uuids.length;
+      if (len === 0) {
+        listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>登録ユーザーがいません</div>";
         return;
+      }
+      let rows = [];
+      for (let i = 0; i < len; i++) {
+        const uid = cachedData.uuids[i];
+        const dname = cachedData.names[i];
+        const profileUrl = 'secondlife:///app/agent/' + uid + '/about';
+        const initialChar = dname.charAt(0).toUpperCase();
+        const st = statuses[i] === '1' ? '1' : '0';
+        rows.push({
+          index: i,
+          status: st,
+          html: `<div class='user-row' id='user-${i}' data-index='${i}' data-status='${st}'><span class='status-dot ${st==='1'?'online':'offline'}'></span><div class='avatar-icon'>${initialChar}</div><a class='name-link' href='${profileUrl}'>${dname}</a></div>`
+        });
+      }
+      rows.sort((a, b) => {
+        if (a.status !== b.status) return parseInt(b.status) - parseInt(a.status);
+        return a.index - b.index;
+      });
+
+      const totalPages = Math.max(1, Math.ceil(rows.length / itemsPerPage));
+      if (currentPage >= totalPages) currentPage = totalPages - 1;
+
+      listContainer.innerHTML = '';
+      for (let i = 0; i < rows.length; i++) {
+        const pageNum = Math.floor(i / itemsPerPage);
+        const div = document.createElement('div');
+        div.innerHTML = rows[i].html;
+        const rowEl = div.firstElementChild;
+        rowEl.style.display = (pageNum === currentPage) ? 'flex' : 'none';
+        listContainer.appendChild(rowEl);
+      }
+      document.getElementById('page-indicator').textContent = (currentPage + 1) + ' / ' + totalPages + ' ページ';
     }
 
-    pageRows.forEach(r => {
-        const profile_url = "secondlife:///app/agent/" + r.uuid + "/about";
-        const initial_char = (r.name && r.name.length > 0) ? r.name.charAt(0).toUpperCase() : '?';
-        
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'user-row';
-        rowDiv.innerHTML = `
-            <span class='status-dot ${r.status === '1' ? 'online' : 'offline'}'></span>
-            <div class='avatar-icon'>${initial_char}</div>
-            <a class='name-link' href='${profile_url}'>${r.name}</a>
-        `;
-        listContainer.appendChild(rowDiv);
-    });
+    function updateAndSort(statuses) {
+      buildRows(statuses);
+    }
 
-    document.getElementById('page-indicator').textContent = (currentPage + 1) + ' / ' + totalPages + ' ページ';
-}
-
-function handleData(data) {
-    cachedData = data;
-    renderList();
-}
-
-function updateStatuses() {
-    if (!slServer) return;
-    const oldScript = document.getElementById('jsonp-script');
-    if (oldScript) oldScript.remove();
-
-    const script = document.createElement('script');
-    script.id = 'jsonp-script';
-    script.src = slServer + '/api/data?callback=handleData';
-    script.onerror = () => {
-        // 通信失敗時の処理
+    document.getElementById('prev-page').onclick = () => {
+      if (!cachedData) return;
+      const totalPages = Math.max(1, Math.ceil(cachedData.uuids.length / itemsPerPage));
+      currentPage = (currentPage - 1 + totalPages) % totalPages;
+      updateStatuses();
     };
-    document.body.appendChild(script);
-}
 
-document.getElementById('prev-page').onclick = () => {
-    if (!cachedData) return;
-    const totalPages = Math.max(1, Math.ceil(cachedData.users.length / itemsPerPage));
-    currentPage = (currentPage - 1 + totalPages) % totalPages;
-    renderList();
-};
+    document.getElementById('next-page').onclick = () => {
+      if (!cachedData) return;
+      const totalPages = Math.max(1, Math.ceil(cachedData.uuids.length / itemsPerPage));
+      currentPage = (currentPage + 1) % totalPages;
+      updateStatuses();
+    };
 
-document.getElementById('next-page').onclick = () => {
-    if (!cachedData) return;
-    const totalPages = Math.max(1, Math.ceil(cachedData.users.length / itemsPerPage));
-    currentPage = (currentPage + 1) % totalPages;
-    renderList();
-};
+    document.getElementById('size-select').onchange = (e) => {
+      document.body.classList.remove('size-small', 'size-medium', 'size-large');
+      document.body.classList.add(e.target.value);
+      if (serverUrl) fetch(serverUrl + '/api/set_size?val=' + e.target.value).catch(err => {});
+    };
 
-document.getElementById('size-select').onchange = (e) => {
-    document.body.classList.remove('size-small', 'size-medium', 'size-large');
-    document.body.classList.add(e.target.value);
-};
+    document.getElementById('font-select').onchange = (e) => {
+      document.body.classList.remove('font-meiryo', 'font-gothic', 'font-rounded', 'font-mincho');
+      document.body.classList.add(e.target.value);
+      if (serverUrl) fetch(serverUrl + '/api/set_font?val=' + e.target.value).catch(err => {});
+    };
 
-document.getElementById('font-select').onchange = (e) => {
-    document.body.classList.remove('font-meiryo', 'font-gothic', 'font-rounded', 'font-mincho');
-    document.body.classList.add(e.target.value);
-};
+    document.getElementById('interval-select').onchange = (e) => {
+      if (serverUrl) fetch(serverUrl + '/api/set_interval?sec=' + e.target.value).catch(err => {});
+    };
 
-document.getElementById('interval-select').onchange = (e) => {
-    if (slServer) {
-        fetch(slServer + '/api/set_interval?sec=' + e.target.value).catch(err => {});
+    document.getElementById('close-btn').onclick = () => {
+      if (serverUrl) fetch(serverUrl + '/api/detach').catch(err => {});
+    };
+
+    function updateStatuses() {
+      if (!serverUrl) return;
+      fetch(serverUrl + '/api/status')
+        .then(r => r.json())
+        .then(data => updateAndSort(data))
+        .catch(e => {});
     }
-};
 
-document.getElementById('close-btn').onclick = () => {
-    if (slServer) {
-        fetch(slServer + '/api/detach').catch(err => {});
+    if (serverUrl) {
+      fetch(serverUrl + '/api/users')
+        .then(r => r.json())
+        .then(data => {
+          cachedData = data;
+          document.getElementById('header-title').textContent = 'Online-Tracker (' + data.uuids.length + ')';
+          
+          // LSL側の設定値をUIに反映
+          if (data.settings) {
+            if (data.settings.interval) document.getElementById('interval-select').value = String(data.settings.interval);
+            if (data.settings.size) {
+              document.getElementById('size-select').value = data.settings.size;
+              document.body.classList.remove('size-small', 'size-medium', 'size-large');
+              document.body.classList.add(data.settings.size);
+            }
+            if (data.settings.font) {
+              document.getElementById('font-select').value = data.settings.font;
+              document.body.classList.remove('font-meiryo', 'font-gothic', 'font-rounded', 'font-mincho');
+              document.body.classList.add(data.settings.font);
+            }
+          }
+          
+          updateStatuses();
+          setInterval(updateStatuses, 2500);
+        })
+        .catch(e => {});
     }
-};
-
-if (slServer) {
-    setInterval(updateStatuses, 2500);
-    updateStatuses();
-}
-</script>
+  </script>
 </body>
 </html>
