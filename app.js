@@ -1,0 +1,117 @@
+let currentPage = 0;
+const itemsPerPage = 10;
+let cachedData = null;
+const listContainer = document.getElementById('user-list');
+
+function buildRows(statuses) {
+  if (!cachedData) return;
+  const len = cachedData.uuids.length;
+  if (len === 0) {
+    listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>登録ユーザーがいません</div>";
+    return;
+  }
+  let rows = [];
+  for (let i = 0; i < len; i++) {
+    const uid = cachedData.uuids[i];
+    const dname = cachedData.names[i];
+    const profileUrl = 'secondlife:///app/agent/' + uid + '/about';
+    const initialChar = dname.charAt(0).toUpperCase();
+    const st = statuses[i] === '1' ? '1' : '0';
+    rows.push({
+      index: i,
+      status: st,
+      html: `<div class='user-row' id='user-${i}' data-index='${i}' data-status='${st}'><span class='status-dot ${st==='1'?'online':'offline'}'></span><div class='avatar-icon'>${initialChar}</div><a class='name-link' href='${profileUrl}'>${dname}</a></div>`
+    });
+  }
+  rows.sort((a, b) => {
+    if (a.status !== b.status) return parseInt(b.status) - parseInt(a.status);
+    return a.index - b.index;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / itemsPerPage));
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+
+  listContainer.innerHTML = '';
+  for (let i = 0; i < rows.length; i++) {
+    const pageNum = Math.floor(i / itemsPerPage);
+    const div = document.createElement('div');
+    div.innerHTML = rows[i].html;
+    const rowEl = div.firstElementChild;
+    rowEl.style.display = (pageNum === currentPage) ? 'flex' : 'none';
+    listContainer.appendChild(rowEl);
+  }
+  document.getElementById('page-indicator').textContent = (currentPage + 1) + ' / ' + totalPages + ' ページ';
+}
+
+function updateAndSort(statuses) {
+  buildRows(statuses);
+}
+
+document.getElementById('prev-page').onclick = () => {
+  if (!cachedData) return;
+  const totalPages = Math.max(1, Math.ceil(cachedData.uuids.length / itemsPerPage));
+  currentPage = (currentPage - 1 + totalPages) % totalPages;
+  updateStatuses();
+};
+
+document.getElementById('next-page').onclick = () => {
+  if (!cachedData) return;
+  const totalPages = Math.max(1, Math.ceil(cachedData.uuids.length / itemsPerPage));
+  currentPage = (currentPage + 1) % totalPages;
+  updateStatuses();
+};
+
+document.getElementById('size-select').onchange = (e) => {
+  document.body.classList.remove('size-small', 'size-medium', 'size-large');
+  document.body.classList.add(e.target.value);
+  fetch('/api/set_size?val=' + e.target.value).catch(err => {});
+};
+
+document.getElementById('font-select').onchange = (e) => {
+  document.body.classList.remove('font-meiryo', 'font-gothic', 'font-rounded', 'font-mincho');
+  document.body.classList.add(e.target.value);
+  fetch('/api/set_font?val=' + e.target.value).catch(err => {});
+};
+
+document.getElementById('interval-select').onchange = (e) => {
+  fetch('/api/set_interval?sec=' + e.target.value).catch(err => {});
+};
+
+document.getElementById('close-btn').onclick = () => {
+  fetch('/api/detach').catch(err => {});
+};
+
+function updateStatuses() {
+  fetch('/api/status')
+    .then(r => r.json())
+    .then(data => updateAndSort(data))
+    .catch(e => {});
+}
+
+// 初期化実行
+fetch('/api/users')
+  .then(r => r.json())
+  .then(data => {
+    cachedData = data;
+    document.getElementById('header-title').textContent = 'Online-Tracker (' + data.uuids.length + ')';
+    
+    if (data.settings) {
+      if (data.settings.interval) document.getElementById('interval-select').value = String(data.settings.interval);
+      if (data.settings.size) {
+        document.getElementById('size-select').value = data.settings.size;
+        document.body.classList.remove('size-small', 'size-medium', 'size-large');
+        document.body.classList.add(data.settings.size);
+      }
+      if (data.settings.font) {
+        document.getElementById('font-select').value = data.settings.font;
+        document.body.classList.remove('font-meiryo', 'font-gothic', 'font-rounded', 'font-mincho');
+        document.body.classList.add(data.settings.font);
+      }
+    }
+    
+    updateStatuses();
+    setInterval(updateStatuses, 2500);
+  })
+  .catch(err => {
+    listContainer.innerHTML = "<div style='color:#ff6b6b;padding:8px;'>初期データ取得エラー</div>";
+  });
